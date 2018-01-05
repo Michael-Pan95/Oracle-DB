@@ -1,7 +1,17 @@
 /*
-    View and Category
+    View Sequence and Category
     
-    view can immediately affect base data(except with read only), index cant
+    view can immediately affect base data(except with read only, with check option), index cant
+    
+    Mutually exclusive constraints:
+    with read only : no dml can be used on the view
+    with check option: only date retrieved by the definition query can be modified
+    
+    when we create index:
+        1. large range of value in a column
+        2. lots of null values 
+        3. frequently used in where statement
+        4. few rows are retrieved
 */
 
 --create a view 
@@ -27,8 +37,15 @@ select * from books
 with read only
 constraint view1_read_only;
 
-drop view view1;
+create or replace view view2
+AS
+select * from books
+where category = 'COMPUTER'
+with check option
+Constraint view2_check_option;
 
+drop view view1;
+drop view view2;
 --create index
 create index customer_name
 On customers(Firstname,Lastname);
@@ -82,3 +99,43 @@ select * from bk;
 select * from cs;
 drop public synonym bk;
 drop synonym cs;
+
+/*
+    Category:
+        user category
+        all category
+        dbm category
+*/
+-- return the definition of the table
+describe books;
+
+--A predefine view named DICTIONARY containing all views in the system category
+describe dictionary;
+select Table_name from dictionary where table_name like '%USER%';
+
+--user_tables contain the user's own relational tables
+select * from User_tables;
+
+--user_tab_columns store column name, data type etc (all definable parts in create table clause)
+select * from user_tab_columns where table_name = 'BOOKS';
+
+--user view: store view name and definition (queries)
+select View_name,TEXT from user_views;
+
+/*
+    --user_constrains: constrain definition
+    --user_cons_columns: column that are specified in constraints
+    C – Check or NN; P – Primary Key; R – Foreign Key; U – Unique;
+    V – With Check option; O – Read Only option
+*/
+select * from user_constraints order by table_name;
+select * from user_cons_columns order by table_name;
+
+/*
+    Comment on table table_name IS 'description'
+    we can see the comment in user_Tab_comment, user_col_comments
+    No way to drop comment. Only thing we can do is to use blank string to replace comment
+*/
+Comment on table books IS 'This is my new comment';
+select * from user_tab_comments where Table_Name = 'BOOKS';
+Comment on table books IS '';
